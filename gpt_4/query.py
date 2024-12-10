@@ -2,10 +2,29 @@ import openai
 import os
 import time
 import json
+from openai import AzureOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
+azure_deployment_model=os.environ['AZURE_DEPLOYMENT_MODEL']
+
+azure_client = AzureOpenAI(
+    azure_deployment = azure_deployment_model,
+    api_key = os.environ['AZURE_OPENAI_API_KEY'],
+    azure_endpoint = os.environ['AZURE_OPENAI_ENDPOINT'],
+    api_version = os.environ['AZURE_OPENAI_API_VERSION'],
+   )
+
+# OpenAI or AzureOpenAI completion client
+Completion_Obj = azure_client.chat.completions if os.environ['AZURE_OPENAI_ENDPOINT'] else openai.ChatCompletion
+
 
 os.environ["OPENAI_API_KEY"] = os.environ["YUFEI_OPENAI_API_KEY"] # put your api key here
 def query(system, user_contents, assistant_contents, model='gpt-4', save_path=None, temperature=1, debug=False):
     
+    if 'gpt' in model and '4' in model:
+        model =  azure_deployment_model if azure_deployment_model else 'gpt-4'    
     for user_content, assistant_content in zip(user_contents, assistant_contents):
         user_content = user_content.split("\n")
         assistant_content = assistant_content.split("\n")
@@ -38,7 +57,7 @@ def query(system, user_contents, assistant_contents, model='gpt-4', save_path=No
     messages.append({"role": "user", "content": user_contents[-1]})
 
     openai.api_key = os.environ["OPENAI_API_KEY"]
-    response = openai.ChatCompletion.create(
+    response = Completion_Obj.create(
         model=model,
         messages=messages,
         temperature=temperature

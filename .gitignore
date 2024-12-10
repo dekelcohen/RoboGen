@@ -1,3 +1,5 @@
+# Ignore .env file for environment variables
+.env
 __pycache__/
 manipulation/gpt_tasks/
 manipulation/gpt_tasks_old/
