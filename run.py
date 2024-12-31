@@ -48,6 +48,8 @@ with open(save_folder, 'w') as f:
 
 np.random.seed(int(time.time()))
 gen_func = np.random.choice(['manipulation', 'locomotion'])
+# naphtali
+args.category = 'Microwave'
 gen_func = 'manipulation' if args.category is not None else gen_func
 if gen_func == 'manipulation':
     if args.category is None:

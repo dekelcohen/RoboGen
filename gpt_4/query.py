@@ -1,15 +1,88 @@
-import openai
+# import openai
+# import os
+# import time
+# import json
+#
+#
+# os.environ["OPENAI_API_KEY"] = os.environ["YUFEI_OPENAI_API_KEY"] # put your api key here
+# def query(system, user_contents, assistant_contents, model='gpt-4', save_path=None, temperature=1, debug=False):
+#
+#     for user_content, assistant_content in zip(user_contents, assistant_contents):
+#         user_content = user_content.split("\n")
+#         assistant_content = assistant_content.split("\n")
+#
+#         for u in user_content:
+#             print(u)
+#         print("=====================================")
+#         for a in assistant_content:
+#             print(a)
+#         print("=====================================")
+#
+#     for u in user_contents[-1].split("\n"):
+#         print(u)
+#
+#     if debug:
+#         import pdb; pdb.set_trace()
+#         return None
+#
+#     print("=====================================")
+#
+#     start = time.time()
+#
+#     num_assistant_mes = len(assistant_contents)
+#     messages = []
+#
+#     messages.append({"role": "system", "content": "{}".format(system)})
+#     for idx in range(num_assistant_mes):
+#         messages.append({"role": "user", "content": user_contents[idx]})
+#         messages.append({"role": "assistant", "content": assistant_contents[idx]})
+#     messages.append({"role": "user", "content": user_contents[-1]})
+#
+#     openai.api_key = os.environ["OPENAI_API_KEY"]
+#     response = openai.ChatCompletion.create(
+#         model=model,
+#         messages=messages,
+#         temperature=temperature
+#     )
+#
+#     result = ''
+#     for choice in response.choices:
+#         result += choice.message.content
+#
+#     end = time.time()
+#     used_time = end - start
+#
+#     print(result)
+#     if save_path is not None:
+#         with open(save_path, "w") as f:
+#             json.dump({"used_time": used_time, "res": result, "system": system, "user": user_contents, "assistant": assistant_contents}, f, indent=4)
+#
+#     return result
+
+# naphtali
 import os
 import time
 import json
+import requests
+from dotenv import load_dotenv
 
-os.environ["OPENAI_API_KEY"] = os.environ["YUFEI_OPENAI_API_KEY"] # put your api key here
+load_dotenv()
+
+# Environment variables
+api_key = os.environ['AZURE_OPENAI_API_KEY']
+endpoint = os.environ['AZURE_OPENAI_ENDPOINT']
+deployment_name = os.environ['AZURE_DEPLOYMENT_MODEL']
+api_version = os.environ['AZURE_OPENAI_API_VERSION']
+
+# Define the API URL
+url = f"{endpoint}/openai/deployments/{deployment_name}/chat/completions?api-version={api_version}"
+
+
 def query(system, user_contents, assistant_contents, model='gpt-4', save_path=None, temperature=1, debug=False):
-    
     for user_content, assistant_content in zip(user_contents, assistant_contents):
         user_content = user_content.split("\n")
         assistant_content = assistant_content.split("\n")
-        
+
         for u in user_content:
             print(u)
         print("=====================================")
@@ -21,13 +94,14 @@ def query(system, user_contents, assistant_contents, model='gpt-4', save_path=No
         print(u)
 
     if debug:
-        import pdb; pdb.set_trace()
+        import pdb;
+        pdb.set_trace()
         return None
 
     print("=====================================")
 
     start = time.time()
-    
+
     num_assistant_mes = len(assistant_contents)
     messages = []
 
@@ -37,24 +111,41 @@ def query(system, user_contents, assistant_contents, model='gpt-4', save_path=No
         messages.append({"role": "assistant", "content": assistant_contents[idx]})
     messages.append({"role": "user", "content": user_contents[-1]})
 
-    openai.api_key = os.environ["OPENAI_API_KEY"]
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        temperature=temperature
-    )
+    # Prepare the payload
+    payload = {
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": 1000,  # Adjust as needed
+    }
 
-    result = ''
-    for choice in response.choices: 
-        result += choice.message.content 
+    # Prepare headers
+    headers = {
+        "Content-Type": "application/json",
+        "api-key": api_key,
+    }
+
+    # Make the API request
+    response = requests.post(url, headers=headers, json=payload)
+
+    if response.status_code != 200:
+        raise Exception(f"Error: {response.status_code}, {response.text}")
+
+    # Parse the response
+    result = response.json()
+    response_text = "".join(choice["message"]["content"] for choice in result.get("choices", []))
 
     end = time.time()
     used_time = end - start
 
-    print(result)
+    print(response_text)
     if save_path is not None:
         with open(save_path, "w") as f:
-            json.dump({"used_time": used_time, "res": result, "system": system, "user": user_contents, "assistant": assistant_contents}, f, indent=4)
+            json.dump({
+                "used_time": used_time,
+                "res": response_text,
+                "system": system,
+                "user": user_contents,
+                "assistant": assistant_contents,
+            }, f, indent=4)
 
-    return result
-
+    return response_text

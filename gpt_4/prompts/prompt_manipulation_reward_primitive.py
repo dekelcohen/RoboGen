@@ -564,7 +564,9 @@ Joints:
     num_lines = len(res)
     for l_idx, line in enumerate(res):
         line = line.lower()
-        if line.startswith("substep"):
+        # naphtali
+        # if line.startswith("substep"):
+        if line.startswith("### substep"):
             substep_name = line.split(":")[1]
             substeps.append(substep_name)
 
@@ -593,19 +595,22 @@ Joints:
                     action_space = res[l_idx_2 + 1]
                     action_spaces.append(action_space)
                     break
-
-            reward_or_primitive_lines = res[py_start_idx:py_end_idx]
-            reward_or_primitive_lines = [line.lstrip() for line in reward_or_primitive_lines]
-            if substep_types[-1] == 'reward':
-                reward_or_primitive_lines[0] = "    " + reward_or_primitive_lines[0]
-                for idx in range(1, len(reward_or_primitive_lines)):
-                    reward_or_primitive_lines[idx] = "        " + reward_or_primitive_lines[idx]
+            # naphtali
+            if py_start_idx >= py_end_idx:
+                print(f'start larger than end {py_start_idx}, {py_end_idx}')
             else:
-                for idx in range(0, len(reward_or_primitive_lines)):
-                    reward_or_primitive_lines[idx] = "        " + reward_or_primitive_lines[idx]
-            reward_or_primitive = "\n".join(reward_or_primitive_lines) + "\n"
+                reward_or_primitive_lines = res[py_start_idx:py_end_idx]
+                reward_or_primitive_lines = [line.lstrip() for line in reward_or_primitive_lines]
+                if substep_types[-1] == 'reward':
+                    reward_or_primitive_lines[0] = "    " + reward_or_primitive_lines[0]
+                    for idx in range(1, len(reward_or_primitive_lines)):
+                        reward_or_primitive_lines[idx] = "        " + reward_or_primitive_lines[idx]
+                else:
+                    for idx in range(0, len(reward_or_primitive_lines)):
+                        reward_or_primitive_lines[idx] = "        " + reward_or_primitive_lines[idx]
+                reward_or_primitive = "\n".join(reward_or_primitive_lines) + "\n"
 
-            reward_or_primitives.append(reward_or_primitive)
+                reward_or_primitives.append(reward_or_primitive)
 
     task_name = task_name.replace(" ", "_")
     parent_folder = os.path.dirname(os.path.dirname(save_path))

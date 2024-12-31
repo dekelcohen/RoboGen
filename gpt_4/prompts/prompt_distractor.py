@@ -166,6 +166,13 @@ Initial config:
             sapian_object_dict = json.load(f)
         sapian_object_categories = list(sapian_object_dict.keys())
         for obj in parsed_yaml:
+            # naphtali
+            if 'name' not in obj:
+                print('name field not in obj')
+                print(parsed_yaml)
+                print(task_config)
+                continue
+
             name = obj['name']
             similarity = check_text_similarity(name, check_embeddings=sapian_obj_embeddings)
             max_similarity = np.max(similarity)
